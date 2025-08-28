@@ -1,1 +1,421 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ultra Pro Max Age Calculator</title>
+  <meta name="description" content="Beautiful age calculator that shows precise age in years, months, days, hours, minutes and seconds with next birthday countdown." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg1: #0f0c29; /* deep */
+      --bg2: #302b63; /* mid */
+      --bg3: #24243e; /* dark */
+      --acc: #8be9fd;
+      --acc2: #ff79c6;
+      --glass: rgba(255,255,255,.08);
+      --text: #eef1ff;
+      --muted: #aab1d6;
+      --good: #2ee59d;
+      --warn: #ffbe3d;
+      --bad: #ff6b6b;
+      --radius-xl: 22px;
+    }* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  background: radial-gradient(1200px 1200px at 10% 10%, #3a1c71 0%, transparent 60%),
+              radial-gradient(900px 900px at 90% 20%, #ff6b6b22 0%, transparent 60%),
+              linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
 
+/* Animated grid glow */
+.grid {
+  position: fixed; inset: 0; pointer-events: none; opacity: .25; mix-blend-mode: screen;
+  background-image: linear-gradient(transparent 23px, #ffffff0a 24px), linear-gradient(90deg, transparent 23px, #ffffff0a 24px);
+  background-size: 24px 24px; animation: drift 30s linear infinite;
+}
+@keyframes drift { from { transform: translateY(0); } to { transform: translateY(-24px); } }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 12px 0 24px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand h1 { font-family: "Space Grotesk", Inter, system-ui; letter-spacing: 0.5px; font-weight: 800; margin: 0; font-size: clamp(20px, 3vw, 32px); }
+.badge { font-size: 12px; padding: 6px 10px; border-radius: 999px; background: linear-gradient(135deg, #00c6ff55, #0072ff33); border: 1px solid #9ad8ff44; color: var(--acc); }
+
+.panel {
+  background: linear-gradient(180deg, #ffffff0f, #ffffff08);
+  border: 1px solid #ffffff1f;
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(16px) saturate(120%);
+  box-shadow: 0 20px 60px rgba(0,0,0,.35), inset 0 1px 0 #ffffff22;
+}
+
+.hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 20px; }
+@media (max-width: 940px) { .hero { grid-template-columns: 1fr; } }
+
+.card { padding: clamp(18px, 2.5vw, 28px); }
+
+.inputs { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-top: 8px; }
+@media (max-width: 640px) { .inputs { grid-template-columns: 1fr; } }
+
+label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; letter-spacing: .3px; }
+
+input, select, button {
+  width: 100%;
+  outline: none; border: 1px solid #ffffff22; color: var(--text);
+  background: #0b122022; border-radius: 14px; padding: 12px 14px; font-size: 15px;
+  transition: border .2s ease, transform .08s ease; 
+}
+input:focus, select:focus { border-color: #9ad8ff77; }
+
+.btn {
+  background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+  border: none; font-weight: 700; letter-spacing: .3px; cursor: pointer;
+  box-shadow: 0 10px 24px #0072ff55; 
+}
+.btn:active { transform: translateY(1px) scale(0.998); }
+.btn.secondary { background: linear-gradient(135deg, #ff8dd1, #cf57ff); box-shadow: 0 10px 24px #cf57ff55; }
+.btn.ghost { background: transparent; border: 1px solid #ffffff2e; box-shadow: none; }
+
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.statgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+@media (max-width: 900px) { .statgrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 580px) { .statgrid { grid-template-columns: 1fr; } }
+
+.tile { position: relative; overflow: hidden; }
+.tile h3 { margin: 0 0 4px; font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: .4px; text-transform: uppercase; }
+.tile .value { font-family: "Space Grotesk"; font-weight: 700; font-size: clamp(18px, 4.6vw, 40px); line-height: 1.1; letter-spacing: .5px; }
+.tile .sub { font-size: 12px; color: #c7d2fe; opacity: .9; }
+.shine:before { content:""; position:absolute; inset:-100% -50% auto; height: 80px; background: linear-gradient(120deg, transparent, #ffffff22, transparent); transform: rotate(10deg); animation: shine 9s ease-in-out infinite; }
+@keyframes shine { 0% { transform: translateX(-60%) rotate(10deg);} 50% { transform: translateX(140%) rotate(10deg);} 100% { transform: translateX(140%) rotate(10deg);} }
+
+.ticker { font-feature-settings: "tnum" 1, "ss01" 1; }
+
+.footer { margin: 20px 0 60px; color: var(--muted); font-size: 12px; text-align: center; }
+
+/* Switch */
+.switch { display:inline-flex; align-items:center; gap:10px; font-size:13px; color:var(--muted) }
+.switch input { display:none }
+.switch .track { width:52px; height:30px; background:#00000055; border:1px solid #ffffff22; border-radius:999px; position:relative }
+.switch .dot { position:absolute; top:2px; left:2px; width:26px; height:26px; border-radius:50%; background:#ffffff; transition: all .25s ease }
+.switch input:checked + .track .dot { transform: translateX(22px); background:#ffd447 }
+.switch input:checked + .track { background:linear-gradient(90deg, #040b1a, #332b5c) }
+
+/* Toast */
+.toast { position: fixed; right: 18px; bottom: 18px; padding: 12px 14px; border-radius: 12px; background: #101626ee; border: 1px solid #ffffff22; color: var(--text); opacity: 0; transform: translateY(12px); pointer-events: none; transition: all .25s ease; }
+.toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+/* Divider */
+.divider { height: 1px; background: linear-gradient(90deg, transparent, #ffffff22, transparent); margin: 14px 0; }
+
+.hint { color: var(--muted); font-size: 12px; }
+.error { color: var(--bad); font-weight: 600; }
+
+  </style>
+</head>
+<body>
+  <div class="grid" aria-hidden="true"></div>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0%" stop-color="#00c6ff"/>
+              <stop offset="100%" stop-color="#cf57ff"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#g)" opacity="0.18"/>
+          <path d="M24 9v6M24 33v6M9 24h6M33 24h6M14 14l4.5 4.5M29.5 29.5L34 34M14 34l4.5-4.5M29.5 18.5L34 14" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+        <h1>Ultra Pro Max — Age Calculator</h1>
+        <span class="badge">Live • Precise • Gorgeous</span>
+      </div>
+      <label class="switch" title="Toggle light">
+        <input id="theme" type="checkbox" />
+        <span class="track"><span class="dot"></span></span>
+        <span>Light</span>
+      </label>
+    </header><section class="hero">
+  <div class="panel card">
+    <h2 style="margin:0 0 8px; font-family: 'Space Grotesk'; font-weight:700">Enter Your Birth Details</h2>
+    <p class="hint">Works offline • Handles leap years • Updates every second</p>
+
+    <div class="inputs">
+      <div>
+        <label for="dob">Date of Birth</label>
+        <input type="date" id="dob" />
+      </div>
+      <div>
+        <label for="tob">Time of Birth (optional)</label>
+        <input type="time" id="tob" step="1" />
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="calc">Calculate Age</button>
+      <button class="btn secondary" id="live">Go Live</button>
+      <button class="btn ghost" id="reset">Reset</button>
+    </div>
+    <div class="divider"></div>
+    <div id="msg" class="hint">Tip: Toggle <b>Go Live</b> to auto-refresh every second.</div>
+  </div>
+
+  <div class="panel card">
+    <h2 style="margin:0 0 8px; font-family: 'Space Grotesk'; font-weight:700">Next Birthday Countdown</h2>
+    <div class="statgrid">
+      <div class="panel card tile shine">
+        <h3>Days</h3>
+        <div class="value ticker" id="nb-days">—</div>
+      </div>
+      <div class="panel card tile shine">
+        <h3>Hours</h3>
+        <div class="value ticker" id="nb-hours">—</div>
+      </div>
+      <div class="panel card tile shine">
+        <h3>Minutes</h3>
+        <div class="value ticker" id="nb-mins">—</div>
+      </div>
+      <div class="panel card tile shine">
+        <h3>Seconds</h3>
+        <div class="value ticker" id="nb-secs">—</div>
+      </div>
+    </div>
+    <p class="hint" style="margin-top:6px">We also show the exact weekday of your next birthday 🎉: <b id="nb-weekday">—</b></p>
+  </div>
+</section>
+
+<section style="margin-top:20px" class="panel card">
+  <h2 style="margin:0 0 8px; font-family: 'Space Grotesk'; font-weight:700">Your Age Breakdown</h2>
+  <p class="hint">One-by-one units with precision</p>
+  <div class="statgrid">
+    <div class="panel card tile shine">
+      <h3>Years • Months • Days</h3>
+      <div class="value ticker" id="ymd">—</div>
+      <div class="sub" id="ymd-note"></div>
+    </div>
+    <div class="panel card tile shine">
+      <h3>Total Months</h3>
+      <div class="value ticker" id="months">—</div>
+    </div>
+    <div class="panel card tile shine">
+      <h3>Total Weeks</h3>
+      <div class="value ticker" id="weeks">—</div>
+    </div>
+    <div class="panel card tile shine">
+      <h3>Total Days</h3>
+      <div class="value ticker" id="days">—</div>
+    </div>
+    <div class="panel card tile shine">
+      <h3>Total Hours</h3>
+      <div class="value ticker" id="hours">—</div>
+    </div>
+    <div class="panel card tile shine">
+      <h3>Total Minutes</h3>
+      <div class="value ticker" id="minutes">—</div>
+    </div>
+    <div class="panel card tile shine">
+      <h3>Total Seconds</h3>
+      <div class="value ticker" id="seconds">—</div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:14px">
+    <button class="btn" id="copy">Copy Results</button>
+    <button class="btn ghost" id="now">Set Time = Now</button>
+  </div>
+  <div id="err" class="hint error" style="margin-top:10px"></div>
+</section>
+
+<p class="footer">Built with ❤️ — No tracking, no ads. Works in any modern browser.</p>
+
+  </div>  <div id="toast" class="toast">Copied to clipboard ✅</div>  <script>
+    const el = id => document.getElementById(id);
+    const pad = n => String(n).padStart(2, '0');
+
+    // THEME
+    (function initTheme(){
+      const theme = el('theme');
+      const saved = localStorage.getItem('theme');
+      if (saved === 'light') { theme.checked = true; document.body.classList.add('light'); applyLight(true); }
+      theme.addEventListener('change', () => applyLight(theme.checked));
+      function applyLight(on){
+        document.body.classList.toggle('light', on);
+        if(on){
+          document.documentElement.style.setProperty('--text', '#0a1020');
+          document.documentElement.style.setProperty('--muted', '#475272');
+          document.documentElement.style.setProperty('--glass', 'rgba(255,255,255,.55)');
+          document.body.style.background = 'linear-gradient(135deg, #f0f5ff, #e3f0ff)';
+          localStorage.setItem('theme','light');
+        } else {
+          document.documentElement.style.setProperty('--text', '#eef1ff');
+          document.documentElement.style.setProperty('--muted', '#aab1d6');
+          document.documentElement.style.setProperty('--glass', 'rgba(255,255,255,.08)');
+          document.body.style.background = '';
+          localStorage.setItem('theme','dark');
+        }
+      }
+    })();
+
+    let timer = null; // live interval
+
+    // Buttons
+    el('calc').addEventListener('click', () => compute(false));
+    el('live').addEventListener('click', () => {
+      if (timer) { clearInterval(timer); timer = null; el('live').textContent = 'Go Live'; el('msg').textContent = 'Live mode off.'; compute(false); return; }
+      compute(true);
+      timer = setInterval(() => compute(true), 1000);
+      el('live').textContent = 'Stop Live';
+      el('msg').textContent = 'Live mode is ON. Updating every second.';
+    });
+    el('reset').addEventListener('click', () => { if(timer) { clearInterval(timer); timer=null; el('live').textContent = 'Go Live'; } el('dob').value=''; el('tob').value=''; clearAll(); })
+    el('now').addEventListener('click', () => { const d=new Date(); el('tob').value = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; })
+    el('copy').addEventListener('click', copyResults);
+
+    function clearAll(){
+      ['ymd','months','weeks','days','hours','minutes','seconds','nb-days','nb-hours','nb-mins','nb-secs','nb-weekday','ymd-note','err'].forEach(k=>el(k).textContent='—');
+      el('msg').textContent='Tip: Toggle Go Live to auto-refresh every second.'
+    }
+
+    function parseDOB(){
+      const d = el('dob').value;
+      if (!d) return null;
+      const [y,m,day] = d.split('-').map(Number);
+      const t = el('tob').value || '00:00:00';
+      const [hh,mm,ss] = t.split(':').map(Number);
+      return new Date(y, m-1, day, hh||0, mm||0, ss||0);
+    }
+
+    function compute(live){
+      const dob = parseDOB();
+      const err = el('err');
+      err.textContent = '';
+      if (!dob) { err.textContent = 'Please enter your date of birth.'; return; }
+      const now = new Date();
+      if (dob > now) { err.textContent = 'Birth date cannot be in the future.'; return; }
+
+      // Y/M/D exact breakdown
+      const ymd = diffYMD(dob, now);
+      el('ymd').textContent = `${ymd.y} years • ${ymd.m} months • ${ymd.d} days`;
+      el('ymd-note').textContent = `As of ${now.toLocaleString()}`;
+
+      // Totals
+      const ms = now - dob;
+      const totalSeconds = Math.floor(ms/1000);
+      const totalMinutes = Math.floor(totalSeconds/60);
+      const totalHours   = Math.floor(totalMinutes/60);
+      const totalDays    = Math.floor(totalHours/24);
+      const totalWeeks   = Math.floor(totalDays/7);
+      const totalMonths  = ymd.y * 12 + ymd.m; // calendar-aware months
+      el('seconds').textContent = numberWithCommas(totalSeconds);
+      el('minutes').textContent = numberWithCommas(totalMinutes);
+      el('hours').textContent   = numberWithCommas(totalHours);
+      el('days').textContent    = numberWithCommas(totalDays);
+      el('weeks').textContent   = numberWithCommas(totalWeeks);
+      el('months').textContent  = numberWithCommas(totalMonths);
+
+      // Next birthday countdown
+      const nb = nextBirthday(dob, now);
+      const msNB = nb.date - now;
+      const days  = Math.floor(msNB / (24*3600*1000));
+      const hours = Math.floor((msNB % (24*3600*1000)) / (3600*1000));
+      const mins  = Math.floor((msNB % (3600*1000)) / (60*1000));
+      const secs  = Math.floor((msNB % (60*1000)) / 1000);
+      el('nb-days').textContent = days;
+      el('nb-hours').textContent = pad(hours);
+      el('nb-mins').textContent = pad(mins);
+      el('nb-secs').textContent = pad(secs);
+      el('nb-weekday').textContent = `${nb.date.toLocaleDateString(undefined, { weekday:"long", year:"numeric", month:"long", day:"numeric" })}`;
+
+      if (!live) pulse('.tile .value');
+    }
+
+    function diffYMD(a, b){
+      // returns calendar diff of years, months, days between dates a->b
+      let y = b.getFullYear() - a.getFullYear();
+      let m = b.getMonth() - a.getMonth();
+      let d = b.getDate() - a.getDate();
+
+      if (d < 0) {
+        // borrow days from previous month of b
+        const prevMonth = new Date(b.getFullYear(), b.getMonth(), 0); // last day of previous month
+        d += prevMonth.getDate();
+        m -= 1;
+      }
+      if (m < 0) { m += 12; y -= 1; }
+
+      return { y, m, d };
+    }
+
+    function nextBirthday(dob, now){
+      let year = now.getFullYear();
+      let n = new Date(year, dob.getMonth(), dob.getDate(), dob.getHours(), dob.getMinutes(), dob.getSeconds());
+
+      // handle Feb 29th birthdays: choose Feb 29 on leap years, else Feb 28 (or Mar 1 depending on jurisdiction). We'll use Feb 29 when available else Feb 28.
+      if (dob.getMonth() === 1 && dob.getDate() === 29) {
+        const isLeap = (y) => new Date(y, 1, 29).getMonth() === 1;
+        if (!isLeap(year) || n < now) {
+          // find next year that has 29th
+          let tryYear = year;
+          while (!isLeap(tryYear) || new Date(tryYear, 1, 29, dob.getHours(), dob.getMinutes(), dob.getSeconds()) <= now) {
+            tryYear++;
+          }
+          n = new Date(tryYear, 1, 29, dob.getHours(), dob.getMinutes(), dob.getSeconds());
+        }
+      } else {
+        if (n <= now) n = new Date(year + 1, dob.getMonth(), dob.getDate(), dob.getHours(), dob.getMinutes(), dob.getSeconds());
+      }
+
+      return { date: n };
+    }
+
+    function pulse(sel){
+      document.querySelectorAll(sel).forEach(elm => {
+        elm.animate([
+          { transform: 'scale(1)', filter: 'brightness(1)' },
+          { transform: 'scale(1.02)', filter: 'brightness(1.2)' },
+          { transform: 'scale(1)', filter: 'brightness(1)' },
+        ], { duration: 520, easing: 'ease-out' });
+      });
+    }
+
+    function numberWithCommas(x){ return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+    function copyResults(){
+      const txt = `AGE BREAKDOWN\n` +
+        `- Years/Months/Days: ${el('ymd').textContent}\n` +
+        `- Total Months: ${el('months').textContent}\n` +
+        `- Total Weeks: ${el('weeks').textContent}\n` +
+        `- Total Days: ${el('days').textContent}\n` +
+        `- Total Hours: ${el('hours').textContent}\n` +
+        `- Total Minutes: ${el('minutes').textContent}\n` +
+        `- Total Seconds: ${el('seconds').textContent}\n` +
+        `NEXT BIRTHDAY\n` +
+        `- ${el('nb-weekday').textContent}\n` +
+        `- D/H/M/S: ${el('nb-days').textContent}d ${el('nb-hours').textContent}h ${el('nb-mins').textContent}m ${el('nb-secs').textContent}s`;
+      navigator.clipboard.writeText(txt).then(()=>toast('Copied to clipboard ✅')).catch(()=>toast('Copy failed.'));
+    }
+
+    function toast(msg){
+      const t = el('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(()=> t.classList.remove('show'), 1700);
+    }
+
+    // Autofill: if date is provided via URL ?dob=YYYY-MM-DD&time=HH:MM:SS
+    (function initFromQuery(){
+      const params = new URLSearchParams(location.search);
+      const dob = params.get('dob');
+      const time = params.get('time');
+      if (dob) el('dob').value = dob;
+      if (time) el('tob').value = time;
+      if (dob) compute(false);
+    })();
+  </script></body>
+  </html>
